@@ -1,0 +1,20 @@
+{% extends 'master/base.html' %}
+{% block content %}
+<h2>Featured Products</h2>
+<ul>
+  {% for product in products %}
+    <li><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a> – Rs. {{ product.price }}</li>
+  {% empty %}
+    <li>No products yet.</li>
+  {% endfor %}
+</ul>
+
+<h2>Latest Blogs</h2>
+<ul>
+  {% for blog in blogs %}
+    <li><a href="{% url 'blog_detail' blog.pk %}">{{ blog.title }}</a></li>
+  {% empty %}
+    <li>No blog posts yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
