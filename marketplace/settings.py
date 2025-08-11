@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-h@9_v@^5-6(7-h*9nw@^q9&(4-73$syfn(9%2(rtzi=b(n=68f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['summer-class-python.onrender.com']
+ALLOWED_HOSTS = ['summer-class-python.onrender.com', 'www.shopyonline.ggff.net']
 
 
 
