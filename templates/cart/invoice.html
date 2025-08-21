@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Invoice</h2>
+    <a href="{% url 'order_success' %}" class="btn btn-success">Confirm Purchase</a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-sm-6">
+          <h5 class="card-title">Order</h5>
+          <p class="mb-1">Order No: <strong>{{ order.order_number }}</strong></p>
+          <p class="mb-0">Date: {{ order.created_at }}</p>
+        </div>
+        <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+          <h5 class="card-title">Billed To</h5>
+          <p class="mb-1">{{ order.full_name|default:"Guest" }}</p>
+          <p class="mb-0">{{ order.email|default:"guest@example.com" }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th class="text-center">Qty</th>
+          <th class="text-end">Price</th>
+          <th class="text-end">Line Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+        <tr>
+          <td>{{ item.product.product_name }}</td>
+          <td class="text-center">{{ item.quantity }}</td>
+          <td class="text-end">Rs. {{ item.price }}</td>
+          <td class="text-end">Rs. {{ item.line_total }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="3" class="text-end">Subtotal:</th>
+          <th class="text-end">Rs. {{ order.subtotal }}</th>
+        </tr>
+        <tr>
+          <th colspan="3" class="text-end">Tax (10%):</th>
+          <th class="text-end">Rs. {{ order.tax }}</th>
+        </tr>
+        <tr>
+          <th colspan="3" class="text-end">Grand Total:</th>
+          <th class="text-end">Rs. {{ order.total }}</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="text-end">
+    <a href="{% url 'order_success' %}" class="btn btn-primary">Pay Now</a>
+  </div>
+</div>
+{% endblock %}

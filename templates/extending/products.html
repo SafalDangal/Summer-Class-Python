@@ -1,12 +1,63 @@
-{% extends 'extending/base.html' %}
+{% extends 'extending/base1.html' %}
+{% load static %}
 
-{% block title %}Products{% endblock %}
+{% block title %}Products - Islington MarketPlace{% endblock %}
+{% block description %}Browse all our products at Islington MarketPlace{% endblock %}
 
 {% block content %}
-<h1>All Products</h1>
-<ul>
-  {% for product in products %}
-    <li><a href="/products/{{ product.id }}/">{{ product.name }}</a> - Rs. {{ product.price }}</li>
-  {% endfor %}
-</ul>
+<!-- ========================= SECTION PRODUCTS ========================= -->
+<section class="section-name padding-y-sm">
+  <div class="container">
+    <header class="section-heading">
+      <h3 class="section-title">All Products</h3>
+        </header>
+        <!-- sect-heading -->
+
+        <div class="row">
+      {% for product in products %}
+      <div class="col-md-3">
+        <div class="card card-product-grid">
+          <a href="{% url 'product_detail' product.category.slug product.slug %}" class="img-wrap">
+            {% if product.image and 'placeholder' not in product.image.url %}
+              <img src="{{ product.image.url }}" alt="{{ product.name }}" />
+            {% elif 'headphone' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wireless_Noise_Cancelling_Headphones.webp" alt="{{ product.name }}" />
+            {% elif 'lamp' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wooden_Study_Lamp.webp" alt="{{ product.name }}" />
+            {% elif 'book' in product.name|lower or 'psychology' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/The_Psychology_of_Money.webp" alt="{{ product.name }}" />
+            {% elif 'wallet' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Vintage_Leather_Wallet.webp" alt="{{ product.name }}" />
+            {% elif 'fitness' in product.name|lower or 'band' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Smart_Fitness_Band.png" alt="{{ product.name }}" />
+            {% elif 'shirt' in product.name|lower or 'tshirt' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/White_Tshirt.webp" alt="{{ product.name }}" />
+            {% elif 'tv' in product.name|lower or 'smart' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/4K_Android_Smart_TV__43_Inch.jpg" alt="{{ product.name }}" />
+            {% elif 'clock' in product.name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Decorative_Wall_Clock.jpg" alt="{{ product.name }}" />
+            {% else %}
+              <img src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}" />
+            {% endif %}
+          </a>
+              <figcaption class="info-wrap">
+            <a href="{% url 'product_detail' product.category.slug product.slug %}" class="title">
+              {{ product.name }}
+            </a>
+            <div class="price mt-1">Rs. {{ product.price }}</div>
+                  <!-- price-wrap.// -->
+              </figcaption>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <p class="text-muted">No products available at the moment.</p>
+      </div>
+      {% endfor %}
+      </div>
+    <!-- row.// -->
+  </div>
+  <!-- container // -->
+</section>
+<!-- ========================= SECTION PRODUCTS END// ========================= -->
 {% endblock %}

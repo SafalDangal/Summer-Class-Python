@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Store - Islington MarketPlace{% endblock %}
+
+{% block content %}
+<section class="section-content padding-y">
+  <div class="container">
+    <header class="section-heading">
+      <h3 class="section-title">All Products</h3>
+    </header>
+
+    <div class="row">
+      {% for product in products %}
+      <div class="col-md-3">
+        <div class="card card-product-grid">
+          <a href="{% url 'product_detail' product.category.slug product.slug %}" class="img-wrap">
+            {# Prefer uploaded image unless it's the placeholder; otherwise fall back to S3 URL by product keywords #}
+            {% if product.image and 'placeholder' not in product.image.url %}
+              <img src="{{ product.image.url }}" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'headphone' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wireless_Noise_Cancelling_Headphones.webp" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'lamp' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wooden_Study_Lamp.webp" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'book' in product.product_name|lower or 'psychology' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/The_Psychology_of_Money.webp" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'wallet' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Vintage_Leather_Wallet.webp" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'fitness' in product.product_name|lower or 'band' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Smart_Fitness_Band.png" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'shirt' in product.product_name|lower or 'tshirt' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/White_Tshirt.webp" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'tv' in product.product_name|lower or 'smart' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/4K_Android_Smart_TV__43_Inch.jpg" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% elif 'clock' in product.product_name|lower %}
+              <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Decorative_Wall_Clock.jpg" alt="{{ product.product_name }}" class="img-fluid" style="height: 200px; object-fit: cover;">
+            {% else %}
+              <img src="{% static 'images/placeholder.jpg' %}" alt="{{ product.product_name }}" class="img-fluid">
+            {% endif %}
+          </a>
+          <figcaption class="info-wrap">
+            <a href="{% url 'product_detail' product.category.slug product.slug %}" class="title">
+              {{ product.product_name }}
+            </a>
+            <div class="price mt-1">Rs. {{ product.price }}</div>
+            {% if product.stock|default:0 > 0 and product.is_available %}
+              <small class="text-muted d-block mt-1">In stock: {{ product.stock }}</small>
+            {% else %}
+              <span class="badge badge-danger mt-1">Out of stock</span>
+            {% endif %}
+          </figcaption>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% if products.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.previous_page_number }}">Previous</a>
+          </li>
+        {% endif %}
+        
+        {% for num in products.paginator.page_range %}
+          {% if products.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+        
+        {% if products.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.next_page_number }}">Next</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

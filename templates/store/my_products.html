@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My Products</h2>
+    <a class="btn btn-success" href="{% url 'product_create' %}">Add Product</a>
+  </div>
+
+  {% regroup products by category as grouped_products %}
+  {% if grouped_products %}
+    {% for group in grouped_products %}
+      <h4 class="mt-4">{{ group.grouper.category_name }}</h4>
+      <div class="row">
+        {% for product in group.list %}
+        <div class="col-md-3">
+          <div class="card card-product-grid">
+            <a href="{% url 'product_detail' product.category.slug product.slug %}" class="img-wrap">
+              {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.product_name }}" class="img-fluid">
+              {% else %}
+                <img src="{% static 'images/placeholder.jpg' %}" alt="{{ product.product_name }}" class="img-fluid">
+              {% endif %}
+            </a>
+            <figcaption class="info-wrap">
+              <a href="{% url 'product_detail' product.category.slug product.slug %}" class="title">
+                {{ product.product_name }}
+              </a>
+              <div class="price mt-1">Rs. {{ product.price }}</div>
+              {% if product.stock|default:0 > 0 and product.is_available %}
+                <small class="text-muted d-block mt-1">In stock: {{ product.stock }}</small>
+              {% else %}
+                <span class="badge badge-danger mt-1">Out of stock</span>
+              {% endif %}
+              <div class="mt-2">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'product_update' product.id %}">Edit</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'variation_list' product.id %}">Variations</a>
+                <form method="post" action="{% url 'product_delete' product.id %}" style="display:inline">{% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this product?')">Delete</button>
+                </form>
+              </div>
+            </figcaption>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>You haven't added any products yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

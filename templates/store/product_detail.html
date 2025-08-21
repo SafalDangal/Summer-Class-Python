@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5" id="page-product" data-product-id="{{ product.id }}">
+        <div class="row">
+                <div class="col-md-6">
+                        {# Prefer uploaded product image unless it's the placeholder; otherwise pick S3 image by keywords #}
+                        {% if product.image and 'placeholder' not in product.image.url %}
+                            <img src="{{ product.image.url }}" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'headphone' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wireless_Noise_Cancelling_Headphones.webp" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'lamp' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wooden_Study_Lamp.webp" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'book' in product.product_name|lower or 'psychology' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/The_Psychology_of_Money.webp" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'wallet' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Vintage_Leather_Wallet.webp" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'fitness' in product.product_name|lower or 'band' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Smart_Fitness_Band.png" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'shirt' in product.product_name|lower or 'tshirt' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/White_Tshirt.webp" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'tv' in product.product_name|lower or 'smart' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/4K_Android_Smart_TV__43_Inch.jpg" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% elif 'clock' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Decorative_Wall_Clock.jpg" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% else %}
+                            <img src="{% static 'images/placeholder.jpg' %}" class="img-fluid" alt="{{ product.product_name }}" style="max-height: 500px">
+                        {% endif %}
+                </div>
+                <div class="col-md-6">
+                                                <h1 class="h2 mb-1 d-flex align-items-center gap-2">
+                                                    <span>{{ product.product_name }}</span>
+                                                    {% if product.stock|default:0 > 0 and product.is_available %}
+                                                        <span class="badge badge-success ml-2">In stock</span>
+                                                    {% else %}
+                                                        <span class="badge badge-danger ml-2">Out of stock</span>
+                                                    {% endif %}
+                                                </h1>
+                        <p class="text-muted mb-3">Category: {{ product.category.category_name }}</p>
+                        <h3 class="text-dark mb-4">Rs. {{ product.price }}</h3>
+            
+                        <div class="mb-4">
+                                <p class="text-muted">In stock: {{ product.stock }}</p>
+                        </div>
+
+            <!-- Color Selection -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Choose Color</label>
+                <div class="d-flex gap-2 mt-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm color-option active" data-color="Silver">
+                        Silver
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm color-option" data-color="Gray">
+                        Gray
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm color-option" data-color="Gold">
+                        Gold
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm color-option" data-color="Black">
+                        Black
+                    </button>
+                </div>
+            </div>
+
+            <!-- Size Selection -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Select Size</label>
+                <div class="d-flex gap-2 mt-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm size-option" data-size="S">
+                        S
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm size-option active" data-size="M">
+                        M
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm size-option" data-size="L">
+                        L
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm size-option" data-size="XL">
+                        XL
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quantity and Add to Cart -->
+            {% if request.user.is_authenticated %}
+            <form action="{% url 'add_cart' product.id %}" method="POST" class="mb-4">
+                {% csrf_token %}
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="quantity" class="form-label fw-bold">Quantity</label>
+                        <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" max="{{ product.stock }}" {% if not product.is_available or product.stock|default:0 <= 0 %}disabled{% endif %}>
+                        <input type="hidden" name="color" id="selected-color" value="Silver">
+                        <input type="hidden" name="size" id="selected-size" value="M">
+                    </div>
+                    <div class="col-md-8">
+                        <button type="submit" class="btn btn-add-cart btn-lg w-100 d-inline-flex align-items-center justify-content-center gap-2" {% if not product.is_available or product.stock|default:0 <= 0 %}disabled{% endif %}>
+                            <span>Add to cart</span>
+                            <img src="/static/images/icons/cart.svg" alt="" style="width:20px;height:20px" />
+                        </button>
+                    </div>
+                </div>
+            </form>
+            {% else %}
+            <div class="mb-4">
+                <a href="{% url 'login' %}?next={% url 'product_detail' product.category.slug product.slug %}" class="btn btn-primary btn-lg w-100">Login to Add to Cart</a>
+            </div>
+            {% endif %}
+
+            <!-- Back to Store -->
+            <div class="mb-4">
+                <a href="{% url 'store' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-4">Customer Reviews</h4>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        {# reviewer avatar: choose representative S3 image based on product name keywords or fall back to product.image #}
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'headphone' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wireless_Noise_Cancelling_Headphones.webp" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'lamp' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Wooden_Study_Lamp.webp" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'book' in product.product_name|lower or 'psychology' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/The_Psychology_of_Money.webp" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'wallet' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Vintage_Leather_Wallet.webp" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'fitness' in product.product_name|lower or 'band' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Smart_Fitness_Band.png" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'shirt' in product.product_name|lower or 'tshirt' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/White_Tshirt.webp" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'tv' in product.product_name|lower or 'smart' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/4K_Android_Smart_TV__43_Inch.jpg" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% elif 'clock' in product.product_name|lower %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/Decorative_Wall_Clock.jpg" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% else %}
+                            <img src="https://mohit-bucket.s3.us-east-1.amazonaws.com/media/photos/products/White_Tshirt.webp" class="rounded-circle me-3" alt="Mike John" width="50" height="50">
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="mb-1">Mike John</h6>
+                                <small class="text-muted">24.04.2020</small>
+                            </div>
+                            
+                            <p class="mb-0 text-muted">Great product! Excellent quality and fast delivery. Highly recommended for anyone looking for premium features at this price point.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+</div>
+
+<script>
+// CSRF helper
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Color selection
+document.querySelectorAll('.color-option').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('selected-color').value = this.dataset.color;
+    });
+});
+
+// Size selection
+document.querySelectorAll('.size-option').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('selected-size').value = this.dataset.size;
+    });
+});
+
+// Generic AI widget init copied from store page
+function initAIWidget(root) {
+    const ask = root.querySelector('.ai-ask');
+    const q = root.querySelector('.ai-question');
+    const ans = root.querySelector('.ai-answer');
+    const speak = root.querySelector('.ai-speak');
+    const stopBtn = root.querySelector('.ai-stop');
+    const productId = root.dataset.productId || '';
+    ask?.addEventListener('click', async () => {
+        const text = (q.value || '').trim();
+        if (!text) { ans.textContent = 'Please enter a question.'; return; }
+        ans.textContent = 'Thinking...'; speak.disabled = true; stopBtn.disabled = true;
+        try {
+            const res = await fetch('{% url "ai_product_answer" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: new URLSearchParams({ question: text, product_id: productId })
+            });
+            const data = await res.json();
+            ans.textContent = data.answer || data.error || 'No answer.';
+            if ('speechSynthesis' in window && data.answer) { speak.disabled = false; stopBtn.disabled = false; }
+        } catch (e) { ans.textContent = 'Failed to contact AI service.'; }
+    });
+    let u = null;
+    speak?.addEventListener('click', () => {
+        const text = ans.textContent?.trim();
+        if (!text) return;
+        if (!('speechSynthesis' in window)) { ans.textContent += '\n(Voice not supported)'; return; }
+        try { if (window.speechSynthesis.speaking) window.speechSynthesis.cancel(); } catch (e) {}
+        u = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(u);
+    });
+    stopBtn?.addEventListener('click', () => { try { window.speechSynthesis.cancel(); } catch (e) {} });
+}
+document.querySelectorAll('.ai-widget').forEach(initAIWidget);
+</script>
+
+<style>
+.color-option.active, .size-option.active {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #007bff !important;
+}
+</style>
+
+{% endblock %}

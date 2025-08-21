@@ -1,12 +1,50 @@
-{% extends 'extending/base.html' %}
+{% extends 'extending/base1.html' %}
+{% load static %}
 
-{% block title %}Blogs{% endblock %}
+{% block title %}Blogs - Islington MarketPlace{% endblock %}
+{% block description %}Read our latest blog posts and articles{% endblock %}
 
 {% block content %}
-<h1>All Blog Posts</h1>
-<ul>
-  {% for blog in blogs %}
-    <li><a href="/blogs/{{ blog.id }}/">{{ blog.title }}</a></li>
-  {% endfor %}
-</ul>
+<!-- ========================= SECTION BLOGS ========================= -->
+<section class="section-name padding-y-sm">
+  <div class="container">
+    <header class="section-heading">
+      <h3 class="section-title">Latest Blog Posts</h3>
+    </header>
+    <!-- sect-heading -->
+
+    <div class="row">
+      {% for blog in blogs %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          {% if blog.image %}
+          <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}" />
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ blog.title }}</h5>
+            {% if blog.excerpt %}
+              <p class="card-text">{{ blog.excerpt|truncatewords:25 }}</p>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                {% if blog.created_at %}
+                  {{ blog.created_at|date:"M d, Y" }}
+                {% endif %}
+              </small>
+              <a href="{% url 'blog_detail' blog.pk %}" class="btn btn-primary">Read More</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <p class="text-muted">No blog posts available at the moment.</p>
+      </div>
+      {% endfor %}
+    </div>
+    <!-- row.// -->
+  </div>
+  <!-- container // -->
+</section>
+<!-- ========================= SECTION BLOGS END// ========================= -->
 {% endblock %}

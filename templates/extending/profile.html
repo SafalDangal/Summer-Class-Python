@@ -1,0 +1,23 @@
+{% extends 'extending/base1.html' %}
+{% block title %}Profile - ShopyOnline{% endblock %}
+{% block content %}
+<section class="section-content padding-y">
+  <div class="container">
+    <h3 class="mb-3">Edit Profile</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="form-row">
+        <div class="form-group col-md-6">{{ form.first_name.label_tag }} {{ form.first_name }}</div>
+        <div class="form-group col-md-6">{{ form.last_name.label_tag }} {{ form.last_name }}</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-6">{{ form.email.label_tag }} {{ form.email }}</div>
+        <div class="form-group col-md-6">{{ form.username.label_tag }} {{ form.username }}</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{% url 'change_password' %}" class="btn btn-outline-secondary ml-2">Change Password</a>
+    </form>
+  </div>
+</section>
+{% endblock %}

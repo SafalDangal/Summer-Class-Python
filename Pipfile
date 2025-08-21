@@ -7,6 +7,9 @@ name = "pypi"
 django = "*"
 pillow = "*"
 django-jazzmin = "*"
+openai = "*"
+python-dotenv = "*"
+requests = "*"
 
 [dev-packages]
 

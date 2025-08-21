@@ -1,9 +1,48 @@
-{% extends 'extending/base.html' %}
+{% extends 'extending/base1.html' %}
+{% load static %}
 
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.name }} - Islington MarketPlace{% endblock %}
+{% block description %}{{ product.description|truncatewords:20 }}{% endblock %}
 
 {% block content %}
-<h1>{{ product.name }}</h1>
-<p>Price: Rs. {{ product.price }}</p>
-<p>Description: {{ product.description }}</p>
+<!-- ========================= SECTION PRODUCT DETAIL ========================= -->
+<section class="section-content padding-y">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="gallery-wrap">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" class="img-fluid" alt="{{ product.name }}" style="max-height: 500px; width: auto;" />
+          {% else %}
+            <img src="{% static 'images/placeholder.jpg' %}" class="img-fluid" alt="{{ product.name }}" />
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="product-info">
+          <h1 class="title">{{ product.name }}</h1>
+          <div class="price-wrap">
+            <span class="price h3 text-dark">Rs. {{ product.price }}</span>
+          </div>
+          <!-- price-wrap.// -->
+          
+          {% if product.description %}
+          <div class="description mt-3">
+            <h6>Description</h6>
+            <p>{{ product.description }}</p>
+          </div>
+          {% endif %}
+          
+          <div class="action-wrap mt-4">
+            <a href="#" class="btn btn-primary btn-lg">Add to Cart</a>
+            <a href="/store/" class="btn btn-outline-secondary btn-lg ml-2">Continue Shopping</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- row.// -->
+  </div>
+  <!-- container .//  -->
+</section>
+<!-- ========================= SECTION PRODUCT DETAIL END// ========================= -->
 {% endblock %}

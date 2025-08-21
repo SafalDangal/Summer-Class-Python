@@ -1,0 +1,48 @@
+<div class="ai-widget card mb-4">
+    <div class="card-header">
+        <h5>AI Description Generator</h5>
+    </div>
+    <div class="card-body">
+        <form id="ai-description-form">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Product Name</label>
+                <input type="text" class="form-control" name="product_name" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Key Features</label>
+                <textarea class="form-control" name="product_features" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Description</button>
+        </form>
+        <div id="ai-response" class="mt-3"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('ai-description-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('/pages/generate-description/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const responseDiv = document.getElementById('ai-response');
+        if (data.description) {
+            responseDiv.innerHTML = `<div class="alert alert-success">${data.description}</div>`;
+        } else {
+            responseDiv.innerHTML = `<div class="alert alert-danger">${data.error || 'Error generating description'}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+</script>

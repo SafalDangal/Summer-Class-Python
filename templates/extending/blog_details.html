@@ -1,8 +1,63 @@
-{% extends 'extending/base.html' %}
+{% extends 'extending/base1.html' %}
+{% load static %}
 
-{% block title %}{{ blog.title }}{% endblock %}
+{% block title %}{{ blog.title }} - Islington MarketPlace{% endblock %}
+{% block description %}{{ blog.excerpt|truncatewords:20 }}{% endblock %}
 
 {% block content %}
-<h1>{{ blog.title }}</h1>
-<p>{{ blog.description }}</p>
+<!-- ========================= SECTION BLOG DETAIL ========================= -->
+<section class="section-content padding-y">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8">
+        <article class="blog-post">
+          {% if blog.image %}
+          <div class="blog-image mb-4">
+            <img src="{{ blog.image.url }}" class="img-fluid" alt="{{ blog.title }}" />
+          </div>
+          {% endif %}
+          
+          <header class="blog-header mb-4">
+            <h1 class="blog-title">{{ blog.title }}</h1>
+            {% if blog.created_at %}
+            <div class="blog-meta text-muted">
+              <small>Published on {{ blog.created_at|date:"F d, Y" }}</small>
+            </div>
+            {% endif %}
+          </header>
+          
+          <div class="blog-content">
+            {% if blog.excerpt %}
+            <div class="blog-excerpt mb-4">
+              <p class="lead">{{ blog.excerpt }}</p>
+            </div>
+            {% endif %}
+            
+            {% if blog.content %}
+            <div class="blog-body">
+              {{ blog.content|safe }}
+            </div>
+            {% endif %}
+          </div>
+        </article>
+      </div>
+      
+      <div class="col-md-4">
+        <aside class="blog-sidebar">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Recent Posts</h5>
+              <ul class="list-unstyled">
+                <li><a href="/blogs/" class="text-decoration-none">← Back to all blogs</a></li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <!-- row.// -->
+  </div>
+  <!-- container .//  -->
+</section>
+<!-- ========================= SECTION BLOG DETAIL END// ========================= -->
 {% endblock %}

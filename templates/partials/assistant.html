@@ -1,0 +1,301 @@
+<style>
+/* Floating circular assistant */
+#ai-assistant {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(100% 100% at 50% 50%, #94b7ff 0%, #4a8fff 50%, #ff74c3 100%);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1050;
+  animation: pulse 3s ease-in-out infinite;
+}
+#ai-assistant::before {
+  content: '';
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.3);
+  filter: blur(6px);
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Chat panel */
+#ai-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 108px;
+  width: min(380px, calc(100% - 48px));
+  max-height: 60vh;
+  display: none;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.25);
+  overflow: hidden;
+  z-index: 1051;
+}
+#ai-header {
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #4a8fff 0%, #ff74c3 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#ai-body {
+  padding: 12px;
+  overflow-y: auto;
+}
+#ai-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid #eee;
+}
+#ai-input input {
+  flex: 1;
+}
+#ai-mic.rec {
+  background: #ffe6ea;
+  color: #d6004a;
+}
+.ai-msg { margin: 6px 0; }
+.ai-msg .who { font-size: .75rem; color: #6c757d; }
+.ai-msg .bubble { background: #f6f8fb; border-radius: 10px; padding: 8px 10px; }
+.ai-msg.me .bubble { background: #e6f3ff; }
+
+/* Tiny wake badge */
+#ai-wake-badge {
+  position: fixed;
+  right: 28px;
+  bottom: 102px; /* floats just above the ring */
+  background: #2ecc71;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.2);
+  display: none;
+  z-index: 1052;
+  user-select: none;
+}
+</style>
+
+<div id="ai-assistant" title="Ask your shopping assistant"></div>
+<div id="ai-wake-badge" aria-hidden="true" title="Wake word is ON">on</div>
+<div id="ai-panel">
+  <div id="ai-header">
+    <strong>Shopping Assistant</strong>
+    <div>
+      <label class="form-check-label me-2" style="color:#fff; font-size:.85rem;">
+        <input type="checkbox" id="ai-wake-toggle" class="form-check-input me-1"> Wake word
+      </label>
+      <small id="ai-status">Idle</small>
+      <button id="ai-close" class="btn btn-sm btn-light">×</button>
+    </div>
+  </div>
+  <div id="ai-body"></div>
+  <div id="ai-input">
+    <input type="text" id="ai-text" class="form-control" placeholder="Tell me what you're buying today..." />
+    <button id="ai-send" class="btn btn-primary">Send</button>
+    <button id="ai-mic" class="btn btn-outline-secondary" title="Hold to talk">🎤</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const ring = document.getElementById('ai-assistant');
+  const panel = document.getElementById('ai-panel');
+  const body = document.getElementById('ai-body');
+  const input = document.getElementById('ai-text');
+  const send = document.getElementById('ai-send');
+  const mic = document.getElementById('ai-mic');
+  const closeBtn = document.getElementById('ai-close');
+  const status = document.getElementById('ai-status');
+  const wakeToggle = document.getElementById('ai-wake-toggle');
+  const wakeBadge = document.getElementById('ai-wake-badge');
+
+  // Simple TTS
+  let preferredVoice = null;
+  function choosePreferredVoice(){
+    try {
+      const voices = window.speechSynthesis.getVoices() || [];
+      if (!voices.length) return;
+      // Target US English female voices first
+      const femaleHints = /female|aria|jenny|zira|samantha|allison|natalie|emma|joanna|kendra|amber|michelle|olivia/i;
+      const isEnUS  = v => (v.lang||'').toLowerCase().includes('en-us') || /us|united states|american/i.test(v.name);
+      const isEnglish = v => (v.lang||'').toLowerCase().startsWith('en');
+      const isGoogleUS = v => /google/i.test(v.name) && (/(us|en\-us)/i.test(v.name) || isEnUS(v));
+      const isMicrosoftUS = v => /microsoft/i.test(v.name) && (/(aria|jenny|zira|en\-us|united states)/i.test(v.name) || isEnUS(v));
+      const buckets = [
+        voices.filter(v => isEnUS(v) && femaleHints.test(v.name)),            // en-US named female
+        voices.filter(v => isMicrosoftUS(v) && femaleHints.test(v.name)),     // MS neural female
+        voices.filter(v => isGoogleUS(v)),                                    // Google en-US (often female)
+        voices.filter(v => isEnUS(v)),                                        // any en-US
+        voices.filter(v => isEnglish(v) && femaleHints.test(v.name)),         // any English female-ish
+        voices.filter(v => isEnglish(v)),                                     // any English
+        voices.filter(v => femaleHints.test(v.name)),                         // any voice with female-ish name
+        voices                                                                // anything left
+      ];
+      preferredVoice = (buckets.find(b => b.length) || [null])[0] || null;
+    } catch(e){ preferredVoice = null; }
+  }
+  if ('speechSynthesis' in window){
+    // Load voices now and when they change (Chrome fires asynchronously)
+    try { choosePreferredVoice(); } catch(e){}
+    try { window.speechSynthesis.onvoiceschanged = choosePreferredVoice; } catch(e){}
+  }
+
+  function speak(text){
+    try {
+      if (!('speechSynthesis' in window)) return;
+      const u = new SpeechSynthesisUtterance(text);
+      // Prefer US English
+      const langPref = preferredVoice?.lang || 'en-US';
+      u.lang = langPref || 'en-US';
+      if (preferredVoice) u.voice = preferredVoice;
+      // Natural cadence: normal rate, slightly higher pitch for feminine tone
+      u.rate = 1.0; u.pitch = 1.08; u.volume = 1.0;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+
+  function addMsg(text, who){
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-msg' + (who==='me' ? ' me' : '');
+    wrap.innerHTML = `<div class="who">${who==='me'?'You':'Assistant'}</div><div class="bubble">${text}</div>`;
+    body.appendChild(wrap);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function openPanel(){ panel.style.display = 'flex'; input.focus(); if (!opened) greet(); opened = true; }
+  function closePanel(){ panel.style.display = 'none'; }
+
+  let opened = false;
+  function greet(){
+    const greeting = "Hi! I’m your shopping assistant. What are you buying today? You can type or hold the mic to speak your preferences (brand, category, budget).";
+    addMsg(greeting, 'ai');
+    speak(greeting);
+  }
+
+  function getContext(){
+    const ctx = {};
+    const prodEl = document.getElementById('page-product');
+    if (prodEl && prodEl.dataset.productId){ ctx.product_id = prodEl.dataset.productId; }
+    return ctx;
+  }
+
+  async function askAI(question){
+    // Reuse existing endpoint; provides graceful fallback if key not set
+    const payload = new URLSearchParams({ question });
+    const ctx = getContext();
+    if (ctx.product_id) payload.append('product_id', ctx.product_id);
+    try {
+      const res = await fetch('{% url "ai_product_answer" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'' },
+        body: payload
+      });
+      const data = await res.json();
+      return data.answer || data.error || 'Sorry, I could not find an answer.';
+    } catch(e){
+      return 'Network error contacting assistant.';
+    }
+  }
+
+  async function handleSend(text){
+    if (!text.trim()) return;
+    addMsg(text, 'me');
+    status.textContent = 'Thinking…';
+    input.value = '';
+    const reply = await askAI(text);
+    status.textContent = 'Idle';
+    addMsg(reply, 'ai');
+    speak(reply);
+  }
+
+  // Click/keys
+  ring.addEventListener('click', openPanel);
+  closeBtn.addEventListener('click', closePanel);
+  send.addEventListener('click', () => handleSend(input.value));
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ handleSend(input.value); }});
+
+  // Voice input via Web Speech API
+  let rec; let listening=false; let supportsSR = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+  let recWake; let wakeOn=false; let wakeArmed=true; // gate to avoid double triggers
+  if (supportsSR){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    rec = new SR(); rec.lang = 'en-US'; rec.interimResults = false;
+    rec.onstart = ()=>{ listening=true; mic.classList.add('rec'); status.textContent='Listening…'; };
+    rec.onend = ()=>{ listening=false; mic.classList.remove('rec'); status.textContent='Idle'; };
+    rec.onerror = ()=>{ listening=false; mic.classList.remove('rec'); status.textContent='Idle'; };
+    rec.onresult = (e)=>{
+      const transcript = Array.from(e.results).map(r=>r[0].transcript).join(' ');
+      handleSend(transcript);
+    };
+    mic.addEventListener('mousedown', ()=>{ try { rec.start(); } catch(e){} });
+    mic.addEventListener('mouseup', ()=>{ try { rec.stop(); } catch(e){} });
+    mic.addEventListener('touchstart', (e)=>{ e.preventDefault(); try { rec.start(); } catch(e){} }, {passive:false});
+    mic.addEventListener('touchend', (e)=>{ e.preventDefault(); try { rec.stop(); } catch(e){} }, {passive:false});
+
+    // Wake-word recognition (continuous)
+    function startWake(){
+      if (recWake) { try { recWake.stop(); } catch(e){} }
+      recWake = new SR();
+      recWake.lang = 'en-US';
+      recWake.interimResults = true;
+      recWake.continuous = true;
+      recWake.onstart = ()=>{ status.textContent = 'Wake on'; wakeBadge.style.display = 'block'; };
+      recWake.onerror = ()=>{ /* keep quiet */ };
+      recWake.onend = ()=>{ if (wakeOn) { try { recWake.start(); } catch(e){} } };
+      recWake.onresult = (evt)=>{
+        const text = Array.from(evt.results).map(r=>r[0].transcript).join(' ').toLowerCase();
+        const wakeRe = /(hey|hi)\s+shop(y|py|pee|ee)/i;
+        if (wakeArmed && wakeRe.test(text)){
+          wakeArmed = false; // disarm to avoid loops
+          openPanel();
+          const prompt = "I'm listening. Tell me what you're buying.";
+          addMsg(prompt, 'ai');
+          speak(prompt);
+          try { rec.start(); } catch(e){}
+          setTimeout(()=>{ wakeArmed = true; }, 3000); // rearm after a moment
+        }
+      };
+      try { recWake.start(); } catch(e){}
+    }
+    function stopWake(){ if (recWake) { try { recWake.stop(); } catch(e){} } wakeBadge.style.display = 'none'; }
+
+    // Toggle control (user gesture required to start mic)
+  wakeToggle.addEventListener('change', ()=>{
+      if (wakeToggle.checked){
+    wakeOn = true; startWake(); wakeBadge.style.display = 'block';
+      } else {
+    wakeOn = false; stopWake(); status.textContent = 'Idle'; wakeBadge.style.display = 'none';
+      }
+    });
+
+    // Pause wake when page hidden; resume when visible
+    document.addEventListener('visibilitychange', ()=>{
+      if (!wakeOn) return;
+      if (document.hidden) stopWake(); else startWake();
+    });
+  } else {
+    mic.disabled = true; mic.title = 'Voice input not supported in this browser';
+    wakeToggle.disabled = true; wakeToggle.title = 'Wake word not supported in this browser';
+  wakeBadge.style.display = 'none';
+  }
+})();
+</script>

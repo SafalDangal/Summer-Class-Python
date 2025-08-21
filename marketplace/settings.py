@@ -11,9 +11,19 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from a local .env file if present
+try:
+    from dotenv import load_dotenv  # type: ignore
+    load_dotenv(BASE_DIR / '.env')
+except Exception:
+    pass
 
 
 # Quick-start development settings - unsuitable for production
@@ -23,49 +33,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-h@9_v@^5-6(7-h*9nw@^q9&(4-73$syfn(9%2(rtzi=b(n=68f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Read from environment; default to False for safety
-DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
+DEBUG = True
 
-# Hosts allowed to serve this app
-# You can override via env var DJANGO_ALLOWED_HOSTS (comma-separated)
-_default_allowed_hosts = [
-    'summer-class-python.onrender.com',
-    'shopyonline.ggff.net',
-    'www.shopyonline.ggff.net',
-]
-ALLOWED_HOSTS = [
-    host.strip() for host in os.getenv(
-        'DJANGO_ALLOWED_HOSTS', ','.join(_default_allowed_hosts)
-    ).split(',') if host.strip()
-]
-
-# Respect proxy headers from Render/Cloudflare for HTTPS and Host
-USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# CSRF trusted origins for cross-site POSTs (admin, forms)
-CSRF_TRUSTED_ORIGINS = [
-    'https://summer-class-python.onrender.com',
-    'https://shopyonline.ggff.net',
-    'https://www.shopyonline.ggff.net',
-]
-
+ALLOWED_HOSTS = []
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'products.apps.ProductsConfig',
-    'blogs.apps.BlogsConfig',
-    'pages.apps.PagesConfig',
-    'siteconfig.apps.SiteconfigConfig',
+	'jazzmin',
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'products.apps.ProductsConfig',
+	'blogs.apps.BlogsConfig',
+	'pages.apps.PagesConfig',
+	'siteconfig.apps.SiteconfigConfig',
+	'store.apps.StoreConfig',
+	'carts.apps.CartsConfig',
 ]
 
 MIDDLEWARE = [
@@ -83,13 +71,15 @@ ROOT_URLCONF = 'marketplace.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates'), os.path.join(BASE_DIR, 'templates2')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'carts.context_processors.cart_counter',
+                'store.context_processors.menu_links',
             ],
         },
     },
